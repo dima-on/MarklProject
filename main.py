@@ -1,74 +1,144 @@
-with open('test.txt', 'r', encoding='utf-8') as file:
-    Lern_input = file.read()
+"""
+Нейронка на основе Маркла.
+Автор: Дмитрий Онуфриев
+Дата создания: 05.04.2024
+"""
+
+import random
 
 
-words = Lern_input.split()
+All_Words = []
+After_Words = []
+After_Words_Count = []
 
-AllWords = []
-AfterWords = []
-AfterWordsCount = []
 
-def checkFullStop(simvol):
-    for oneSimvol in simvol:
-        if oneSimvol == "." or oneSimvol == "?":
+def lern_function():
+    """Read and Lern"""
+    with open("test.txt", "r", encoding="utf-8") as file:
+        lern_input = file.read()
+    all_words = lern_input.split()
+    return all_words
+
+
+words = lern_function()
+
+
+def check_fullstop(simvol):
+    """Check which words has fullstop"""
+    for one_simvol in simvol:
+        if one_simvol in (".", "?"):
             return False
     return True
-def checkSetWords(simvol):
-    iCount = 0
-    for sim in AllWords:
+
+
+def check_set_words(simvol):
+    """Check which words being"""
+
+    i_count = 0
+    for sim in All_Words:
         if simvol == sim:
-            return iCount
-        iCount += 1
+            return i_count
+        i_count += 1
     return -1
 
-def check_Set_Next_Words(simvol, indexWord):
-    iCount = 0
-    print(simvol, indexWord)
-    for WordsIn in AfterWords[indexWord]:
-        if simvol == WordsIn:
-            return iCount
+
+def check_set_next_words(simvol, index_word):
+    """Check which next words being"""
+
+    i_count = 0
+    for words_in in After_Words[index_word]:
+        if simvol == words_in:
+            return i_count
+        i_count += 1
+
     return -1
 
-def Write_New_Words(CountForInCheck, nextWord):
+
+def write_new_words(count_for_in_check, next_word):
+    """Write new words to array"""
+    After_Words[count_for_in_check].append(next_word)
+    After_Words_Count[count_for_in_check].append(1)
 
 
-    AfterWords[CountForInCheck].append(nextWord)
-    AfterWordsCount[CountForInCheck].append(1)
-def Check_New_Words(CountForInCheck, Index_Word):
-
-    IndexWords = check_Set_Next_Words(words[CountForInCheck + 1], Index_Word)
-    print(IndexWords, CountForInCheck)
-    if IndexWords >= 0:
-        len(AfterWordsCount[Index_Word])
-        AfterWordsCount[Index_Word][IndexWords] += 1
+def check_new_words(count_for_in_check, index_word):
+    """Add new next words for array"""
+    index_words = check_set_next_words(words[count_for_in_check + 1], index_word)
+    if index_words >= 0:
+        After_Words_Count[index_word][index_words] += 1
     else:
-        AfterWords[Index_Word].append(words[CountForInCheck + 1])
-        AfterWordsCount[Index_Word].append(1)
+        After_Words[index_word].append(words[count_for_in_check + 1])
+        After_Words_Count[index_word].append(1)
 
 
+def full_lern():
+    """This function lerns user input"""
+    count_all = 0
+    count_no = 0
+    for word in words:
+        if check_fullstop(word):
+            index_word_set = check_set_words(word)
+            if index_word_set >= 0:
+                check_new_words(count_all, index_word_set)
 
-CountForInCheckAll = 0
-CountForInCheckYes = 0
-CountForInCheckNo = 0
-for word in words:
-    if checkFullStop(word):
-        IndexWordSet = checkSetWords(word)
-        if IndexWordSet >= 0:
-            print(IndexWordSet)
-            Check_New_Words(CountForInCheckAll, IndexWordSet)
-            CountForInCheckYes += 1
+            else:
 
-        else:
+                All_Words.append(word)
+                After_Words.append([])
+                After_Words_Count.append([])
+                write_new_words(count_no, words[count_all + 1])
 
-            AllWords.append(word)
-            AfterWords.append([])
-            AfterWordsCount.append([])
-            Write_New_Words(CountForInCheckNo, words[CountForInCheckAll + 1])
-
-            CountForInCheckNo += 1
-    CountForInCheckAll += 1
+                count_no += 1
+        count_all += 1
 
 
-print(AllWords)
-print(AfterWords)
-print(AfterWordsCount)
+full_lern()
+ANSWER = ""
+
+
+def make_sentences(new_word):
+    """Make sentences and find new word"""
+    global ANSWER
+    count_try = 0
+    for word in All_Words:
+        if word == new_word:
+
+            good_index = [0]
+            new_index = 0
+
+            for count_next_word in After_Words_Count[count_try]:
+                if new_index > 0:
+                    if count_next_word >= After_Words_Count[count_try][good_index[0]]:
+
+                        if (
+                            count_next_word
+                            == After_Words_Count[count_try][good_index[0]]
+                        ):
+
+                            good_index.append(new_index)
+                        else:
+
+                            good_index = [new_index]
+                new_index += 1
+
+            next_index = good_index[0]
+
+            if len(good_index) > 1:
+                next_index = good_index[random.randrange(0, len(good_index))]
+
+            ANSWER = ANSWER + " " + After_Words[count_try][next_index]
+            make_sentences(After_Words[count_try][next_index])
+
+            break
+        count_try += 1
+
+
+FIRST_WORD = input("Enter the first")
+ANSWER += FIRST_WORD
+make_sentences(FIRST_WORD)
+
+print()
+print(ANSWER)
+print()
+print(All_Words)
+print(After_Words)
+print(After_Words_Count)
