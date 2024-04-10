@@ -6,13 +6,15 @@
 
 import random
 
-
-All_Words = []
-After_Words = []
-After_Words_Count = []
+import pandas as pd
 
 
-def lern_function():
+all_words: list[str] = []
+after_words: list[list[str]] = []
+after_words_count: list[list[int]] = []
+
+
+def learn_function():
     """Read and Lern"""
     with open("test.txt", "r", encoding="utf-8") as file:
         lern_input = file.read()
@@ -20,10 +22,10 @@ def lern_function():
     return all_words
 
 
-words = lern_function()
+words = learn_function()
 
 
-def check_fullstop(simvol):
+def check_fullstop(simvol) -> bool:
     """Check which words has fullstop"""
     for one_simvol in simvol:
         if one_simvol in (".", "?"):
@@ -35,7 +37,7 @@ def check_set_words(simvol):
     """Check which words being"""
 
     i_count = 0
-    for sim in All_Words:
+    for sim in all_words:
         if simvol == sim:
             return i_count
         i_count += 1
@@ -46,7 +48,7 @@ def check_set_next_words(simvol, index_word):
     """Check which next words being"""
 
     i_count = 0
-    for words_in in After_Words[index_word]:
+    for words_in in after_words[index_word]:
         if simvol == words_in:
             return i_count
         i_count += 1
@@ -56,18 +58,18 @@ def check_set_next_words(simvol, index_word):
 
 def write_new_words(count_for_in_check, next_word):
     """Write new words to array"""
-    After_Words[count_for_in_check].append(next_word)
-    After_Words_Count[count_for_in_check].append(1)
+    after_words[count_for_in_check].append(next_word)
+    after_words_count[count_for_in_check].append(1)
 
 
 def check_new_words(count_for_in_check, index_word):
     """Add new next words for array"""
     index_words = check_set_next_words(words[count_for_in_check + 1], index_word)
     if index_words >= 0:
-        After_Words_Count[index_word][index_words] += 1
+        after_words_count[index_word][index_words] += 1
     else:
-        After_Words[index_word].append(words[count_for_in_check + 1])
-        After_Words_Count[index_word].append(1)
+        after_words[index_word].append(words[count_for_in_check + 1])
+        after_words_count[index_word].append(1)
 
 
 def full_lern():
@@ -82,9 +84,9 @@ def full_lern():
 
             else:
 
-                All_Words.append(word)
-                After_Words.append([])
-                After_Words_Count.append([])
+                all_words.append(word)
+                after_words.append([])
+                after_words_count.append([])
                 write_new_words(count_no, words[count_all + 1])
 
                 count_no += 1
@@ -92,53 +94,59 @@ def full_lern():
 
 
 full_lern()
-ANSWER = ""
+answer = ""
 
 
 def make_sentences(new_word):
     """Make sentences and find new word"""
-    global ANSWER
     count_try = 0
-    for word in All_Words:
-        if word == new_word:
+    global answer
 
-            good_index = [0]
-            new_index = 0
+    for word in all_words:
+        if word != new_word:
+            count_try += 1
+            continue
 
-            for count_next_word in After_Words_Count[count_try]:
-                if new_index > 0:
-                    if count_next_word >= After_Words_Count[count_try][good_index[0]]:
+        good_index = [0]
+        new_index = 0
 
-                        if (
-                            count_next_word
-                            == After_Words_Count[count_try][good_index[0]]
-                        ):
+        for count_next_word in after_words_count[count_try]:
+            if new_index <= 0:
+                continue
+            if count_next_word >= after_words_count[count_try][good_index[0]]:
+                if count_next_word == after_words_count[count_try][good_index[0]]:
+                    good_index.append(new_index)
+                else:
+                    good_index = [new_index]
+            new_index += 1
 
-                            good_index.append(new_index)
-                        else:
+        next_index = good_index[0]
 
-                            good_index = [new_index]
-                new_index += 1
+        if len(good_index) > 1:
+            next_index = good_index[random.randrange(0, len(good_index))]
 
-            next_index = good_index[0]
+        answer = answer + " " + after_words[count_try][next_index]
+        make_sentences(after_words[count_try][next_index])
+        break
 
-            if len(good_index) > 1:
-                next_index = good_index[random.randrange(0, len(good_index))]
-
-            ANSWER = ANSWER + " " + After_Words[count_try][next_index]
-            make_sentences(After_Words[count_try][next_index])
-
-            break
-        count_try += 1
+    return answer
 
 
-FIRST_WORD = input("Enter the first")
-ANSWER += FIRST_WORD
-make_sentences(FIRST_WORD)
+first_word = input("Enter the first")
+answer += first_word
+answer = make_sentences(first_word)
 
 print()
-print(ANSWER)
+print(answer)
 print()
-print(All_Words)
-print(After_Words)
-print(After_Words_Count)
+print(all_words)
+print(after_words)
+print(after_words_count)
+
+
+def main():
+    pass
+
+
+if __name__ == "__main__":
+    main()
